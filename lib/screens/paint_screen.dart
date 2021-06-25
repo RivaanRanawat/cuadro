@@ -25,6 +25,8 @@ class _PaintScreenState extends State<PaintScreen> {
   List<Widget> textBlankWidget = [];
   List<Map> messages = [];
   TextEditingController textEditingController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
+  var focusNode = FocusNode();
 
   @override
   void initState() {
@@ -102,6 +104,8 @@ class _PaintScreenState extends State<PaintScreen> {
         setState(() {
           messages.add(messageData);
         });
+        _scrollController.animateTo(_scrollController.position.maxScrollExtent+40,
+            duration: Duration(milliseconds: 200), curve: Curves.easeInOut);
       });
 
       // changing stroke width of pen
@@ -247,8 +251,9 @@ class _PaintScreenState extends State<PaintScreen> {
               Container(
                 height: MediaQuery.of(context).size.height * 0.3,
                 child: ListView.builder(
+                    controller: _scrollController,
                     shrinkWrap: true,
-                    primary: true,
+                    // primary: true,
                     itemCount: messages.length,
                     itemBuilder: (context, index) {
                       // String username = messages[index].keys.elementAt(index);
@@ -274,17 +279,21 @@ class _PaintScreenState extends State<PaintScreen> {
           Align(
             alignment: Alignment.bottomCenter,
             child: Container(
-              margin: EdgeInsets.only(left: 20, right: 20, bottom: 30),
+              margin: EdgeInsets.only(left: 20, right: 20),
               child: TextField(
+                focusNode: focusNode,
                 controller: textEditingController,
                 onSubmitted: (value) {
+                  print(dataOfRoom["word"]);
                   Map map = {
                     "username": widget.data["nickname"],
-                    "msg": value,
+                    "msg": value.trim(),
+                    "word": dataOfRoom["word"],
                     "roomName": widget.data["name"]
                   };
                   socket.emit("msg", map);
                   textEditingController.clear();
+                  FocusScope.of(context).requestFocus(focusNode);
                 },
                 decoration: InputDecoration(
                   border: OutlineInputBorder(

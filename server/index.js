@@ -113,9 +113,20 @@ io.on("connection", (socket) => {
 
   // sending messages in paint screen
   socket.on("msg", (data) => {
-    console.log(data.username)
-    console.log(data.msg)
-    io.to(data.roomName).emit("msg", { username: data.username, msg: data.msg });
+    console.log(data.username);
+    console.log(data.msg);
+    if (data.msg == data.word) {
+      io.to(data.roomName).emit("msg", {
+        username: data.username,
+        msg: "guessed it!",
+      });
+      // increment points algorithm
+    } else {
+      io.to(data.roomName).emit("msg", {
+        username: data.username,
+        msg: data.msg,
+      });
+    }
   });
 });
 
