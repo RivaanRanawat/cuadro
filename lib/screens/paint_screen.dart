@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:cuadro/models/custom_painter.dart';
 import 'package:cuadro/models/touch_point.dart';
 import 'package:cuadro/screens/home_screen.dart';
+import 'package:cuadro/sidebar/player_score_drawer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
@@ -24,9 +27,32 @@ class _PaintScreenState extends State<PaintScreen> {
   Map dataOfRoom;
   List<Widget> textBlankWidget = [];
   List<Map> messages = [];
+  List<Map> scoreboard = [];
   TextEditingController textEditingController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   var focusNode = FocusNode();
+  var scaffoldKey = GlobalKey<ScaffoldState>();
+
+  Timer _timer;
+  int _start = 10;
+
+  void startTimer() {
+    const oneSec = const Duration(seconds: 1);
+    _timer = new Timer.periodic(
+      oneSec,
+      (Timer timer) {
+        if (_start == 0) {
+          setState(() {
+            timer.cancel();
+          });
+        } else {
+          setState(() {
+            _start--;
+          });
+        }
+      },
+    );
+  }
 
   @override
   void initState() {
@@ -62,11 +88,19 @@ class _PaintScreenState extends State<PaintScreen> {
     socket.onConnect((data) {
       print("connected");
       socket.on("updateRoom", (roomData) {
-        print(roomData["word"]);
+        print(roomData);
         setState(() {
-          dataOfRoom = roomData;
           renderTextBlank(roomData["word"]);
+          dataOfRoom = roomData;
         });
+        for (int i = 0; i < roomData["players"].length; i++) {
+          setState(() {
+            scoreboard.add({
+              "username": roomData["players"][i]["nickname"],
+              "points": roomData["players"][i]["points"].toString()
+            });
+          });
+        }
       });
 
       // Not correct game
@@ -104,8 +138,10 @@ class _PaintScreenState extends State<PaintScreen> {
         setState(() {
           messages.add(messageData);
         });
-        _scrollController.animateTo(_scrollController.position.maxScrollExtent+40,
-            duration: Duration(milliseconds: 200), curve: Curves.easeInOut);
+        _scrollController.animateTo(
+            _scrollController.position.maxScrollExtent + 40,
+            duration: Duration(milliseconds: 200),
+            curve: Curves.easeInOut);
       });
 
       // changing stroke width of pen
@@ -130,6 +166,7 @@ class _PaintScreenState extends State<PaintScreen> {
   @override
   void dispose() {
     socket.dispose();
+    _timer.cancel();
     super.dispose();
   }
 
@@ -165,6 +202,8 @@ class _PaintScreenState extends State<PaintScreen> {
     }
 
     return Scaffold(
+      key: scaffoldKey,
+      drawer: PlayerScore(scoreboard),
       backgroundColor: Colors.white,
       body: Stack(
         children: <Widget>[
@@ -318,7 +357,30 @@ class _PaintScreenState extends State<PaintScreen> {
               ),
             ),
           ),
+          SafeArea(
+            child: IconButton(
+              icon: Icon(
+                Icons.menu,
+                color: Colors.black,
+              ),
+              onPressed: () => scaffoldKey.currentState.openDrawer(),
+            ),
+          ),
         ],
+      ),
+      floatingActionButton: Container(
+        margin: EdgeInsets.only(
+          bottom: 30,
+        ),
+        child: FloatingActionButton(
+          onPressed: startTimer,
+          elevation: 7,
+          backgroundColor: Colors.white,
+          child: Text(
+            "$_start",
+            style: TextStyle(color: Colors.black, fontSize: 22),
+          ),
+        ),
       ),
     );
   }
