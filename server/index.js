@@ -91,14 +91,19 @@ io.on("connection", (socket) => {
         return;
       }
       console.log(room);
-      if (room.isJoin || room.players.length < room.occupancy) {
+      if (room.isJoin) {
+        // waiting for players
         let player = {
           socketID: socket.id,
           nickname,
         };
         room.players.push(player);
-        room = await room.save();
         socket.join(name);
+        console.log(room.players.length);
+        if (room.players.length === room.occupancy) {
+          room.isJoin = false;
+        }
+        room = await room.save();
         io.to(name).emit("updateRoom", room);
       } else {
         socket.emit(
