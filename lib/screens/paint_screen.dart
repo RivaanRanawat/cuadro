@@ -34,7 +34,8 @@ class _PaintScreenState extends State<PaintScreen> {
   var scaffoldKey = GlobalKey<ScaffoldState>();
 
   Timer _timer;
-  int _start = 10;
+  int _start = 30;
+  int roundTime = 30;
 
   // round time -> 30 sec
   // waiting -> until room.players === room.occupancy
@@ -97,6 +98,11 @@ class _PaintScreenState extends State<PaintScreen> {
           renderTextBlank(roomData["word"]);
           dataOfRoom = roomData;
         });
+        if(roomData["isJoin"] != true) {
+          // started timer as game started
+          startTimer();
+        }
+        scoreboard.clear();
         for (int i = 0; i < roomData["players"].length; i++) {
           setState(() {
             scoreboard.add({
@@ -340,7 +346,9 @@ class _PaintScreenState extends State<PaintScreen> {
                               "username": widget.data["nickname"],
                               "msg": value.trim(),
                               "word": dataOfRoom["word"],
-                              "roomName": widget.data["name"]
+                              "roomName": widget.data["name"],
+                              "totalTime": roundTime,
+                              "timeTaken": _start,
                             };
                             socket.emit("msg", map);
                             textEditingController.clear();

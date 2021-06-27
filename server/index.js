@@ -117,7 +117,7 @@ io.on("connection", (socket) => {
   });
 
   // sending messages in paint screen
-  socket.on("msg", (data) => {
+  socket.on("msg", async (data) => {
     console.log(data.username);
     console.log(data.msg);
     if (data.msg == data.word) {
@@ -125,7 +125,14 @@ io.on("connection", (socket) => {
         username: data.username,
         msg: "guessed it!",
       });
-      // increment points algorithm
+      // increment points algorithm = totaltime/timetaken *10 = 30/20
+      let room = await Room.find({ name: data.roomName });
+      let userPlayer = room[0].players.filter(
+        (player) => player.nickname === data.username
+      );
+      userPlayer.points = (data.totalTime / data.timeTaken) * 10;
+      room = await room[0].save();
+      // not sending points here, will send after every user has guessed
     } else {
       io.to(data.roomName).emit("msg", {
         username: data.username,
