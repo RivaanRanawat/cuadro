@@ -32,6 +32,7 @@ class _PaintScreenState extends State<PaintScreen> {
   final ScrollController _scrollController = ScrollController();
   var focusNode = FocusNode();
   var scaffoldKey = GlobalKey<ScaffoldState>();
+  int guessedUserCtr = 0;
 
   Timer _timer;
   int _start = 30;
@@ -98,7 +99,7 @@ class _PaintScreenState extends State<PaintScreen> {
           renderTextBlank(roomData["word"]);
           dataOfRoom = roomData;
         });
-        if(roomData["isJoin"] != true) {
+        if (roomData["isJoin"] != true) {
           // started timer as game started
           startTimer();
         }
@@ -111,6 +112,22 @@ class _PaintScreenState extends State<PaintScreen> {
             });
           });
         }
+      });
+
+      // updating scoreboard
+      socket.on("updateScore", (roomData) {
+        print(roomData);
+        print("pls");
+        scoreboard.clear();
+        for (int i = 0; i < roomData["players"].length; i++) {
+          setState(() {
+            scoreboard.add({
+              "username": roomData["players"][i]["nickname"],
+              "points": roomData["players"][i]["points"].toString()
+            });
+          });
+        }
+        print(scoreboard);
       });
 
       // Not correct game
@@ -147,7 +164,14 @@ class _PaintScreenState extends State<PaintScreen> {
         print(messageData);
         setState(() {
           messages.add(messageData);
+          guessedUserCtr = messageData["ctr"];
         });
+        if (guessedUserCtr == dataOfRoom["players"].length) {
+          print("update score");
+          // everyone has guessed OR Time of the round over
+          socket.emit("updateScore", widget.data["name"]);
+        }
+        print("ctr $guessedUserCtr");
         _scrollController.animateTo(
             _scrollController.position.maxScrollExtent + 40,
             duration: Duration(milliseconds: 200),
@@ -341,6 +365,7 @@ class _PaintScreenState extends State<PaintScreen> {
                           focusNode: focusNode,
                           controller: textEditingController,
                           onSubmitted: (value) {
+                            print(dataOfRoom["players"].length);
                             print(dataOfRoom["word"]);
                             Map map = {
                               "username": widget.data["nickname"],
@@ -348,7 +373,8 @@ class _PaintScreenState extends State<PaintScreen> {
                               "word": dataOfRoom["word"],
                               "roomName": widget.data["name"],
                               "totalTime": roundTime,
-                              "timeTaken": _start,
+                              "timeTaken": roundTime - _start,
+                              "guessedUserCtr": guessedUserCtr
                             };
                             socket.emit("msg", map);
                             textEditingController.clear();
