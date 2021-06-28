@@ -37,6 +37,7 @@ class _PaintScreenState extends State<PaintScreen> {
   Timer _timer;
   int _start = 30;
   int roundTime = 30;
+  int guessedUserCtr = 0;
 
   // round time -> 30 sec
   // waiting -> until room.players === room.occupancy
@@ -172,7 +173,11 @@ class _PaintScreenState extends State<PaintScreen> {
         print(messageData);
         setState(() {
           messages.add(messageData);
+          guessedUserCtr = messageData["guessedUserCtr"];
         });
+        if(guessedUserCtr == dataOfRoom["players"].length) {
+          // next round
+        }
         _scrollController.animateTo(
             _scrollController.position.maxScrollExtent + 40,
             duration: Duration(milliseconds: 200),
@@ -377,6 +382,7 @@ class _PaintScreenState extends State<PaintScreen> {
                                 "roomName": widget.data["name"],
                                 "totalTime": roundTime,
                                 "timeTaken": roundTime - _start,
+                                "guessedUserCtr": guessedUserCtr
                               };
                               socket.emit("msg", map);
                               textEditingController.clear();

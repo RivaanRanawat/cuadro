@@ -137,6 +137,7 @@ io.on("connection", (socket) => {
       io.to(data.roomName).emit("msg", {
         username: data.username,
         msg: "guessed it!",
+        guessedUserCtr: data.guessedUserCtr+1
       });
       socket.emit("closeInput", "");
       // not sending points here, will send after every user has guessed
@@ -144,6 +145,7 @@ io.on("connection", (socket) => {
       io.to(data.roomName).emit("msg", {
         username: data.username,
         msg: data.msg,
+        guessedUserCtr: data.guessedUserCtr
       });
     }
   });
