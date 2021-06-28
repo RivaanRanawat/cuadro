@@ -32,7 +32,7 @@ class _PaintScreenState extends State<PaintScreen> {
   final ScrollController _scrollController = ScrollController();
   var focusNode = FocusNode();
   var scaffoldKey = GlobalKey<ScaffoldState>();
-  int guessedUserCtr = 0;
+  bool isTextInputReadOnly = false;
 
   Timer _timer;
   int _start = 30;
@@ -160,18 +160,19 @@ class _PaintScreenState extends State<PaintScreen> {
         }
       });
 
+      socket.on("closeInput", (_) {
+        socket.emit("updateScore", widget.data["name"]);
+        FocusScope.of(context).unfocus();
+        setState(() {
+          isTextInputReadOnly = true;
+        });
+      });
+
       socket.on("msg", (messageData) {
         print(messageData);
         setState(() {
           messages.add(messageData);
-          guessedUserCtr = messageData["ctr"];
         });
-        if (guessedUserCtr == dataOfRoom["players"].length) {
-          print("update score");
-          // everyone has guessed OR Time of the round over
-          socket.emit("updateScore", widget.data["name"]);
-        }
-        print("ctr $guessedUserCtr");
         _scrollController.animateTo(
             _scrollController.position.maxScrollExtent + 40,
             duration: Duration(milliseconds: 200),
@@ -362,23 +363,25 @@ class _PaintScreenState extends State<PaintScreen> {
                       child: Container(
                         margin: EdgeInsets.only(left: 20, right: 20),
                         child: TextField(
+                          readOnly: isTextInputReadOnly,
                           focusNode: focusNode,
                           controller: textEditingController,
                           onSubmitted: (value) {
                             print(dataOfRoom["players"].length);
                             print(dataOfRoom["word"]);
-                            Map map = {
-                              "username": widget.data["nickname"],
-                              "msg": value.trim(),
-                              "word": dataOfRoom["word"],
-                              "roomName": widget.data["name"],
-                              "totalTime": roundTime,
-                              "timeTaken": roundTime - _start,
-                              "guessedUserCtr": guessedUserCtr
-                            };
-                            socket.emit("msg", map);
-                            textEditingController.clear();
-                            FocusScope.of(context).requestFocus(focusNode);
+                            if (value.trim().isNotEmpty) {
+                              Map map = {
+                                "username": widget.data["nickname"],
+                                "msg": value.trim(),
+                                "word": dataOfRoom["word"],
+                                "roomName": widget.data["name"],
+                                "totalTime": roundTime,
+                                "timeTaken": roundTime - _start,
+                              };
+                              socket.emit("msg", map);
+                              textEditingController.clear();
+                              FocusScope.of(context).requestFocus(focusNode);
+                            }
                           },
                           decoration: InputDecoration(
                             border: OutlineInputBorder(

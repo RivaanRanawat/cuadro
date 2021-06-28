@@ -117,7 +117,7 @@ io.on("connection", (socket) => {
   });
 
   socket.on("updateScore", async (name) => {
-    console.log("update score index")
+    console.log("update score index");
     const room = await Room.findOne({ name });
     io.to(name).emit("updateScore", room);
   });
@@ -127,25 +127,23 @@ io.on("connection", (socket) => {
     console.log(data.username);
     console.log(data.msg);
     if (data.msg === data.word) {
-      io.to(data.roomName).emit("msg", {
-        username: data.username,
-        msg: "guessed it!",
-        ctr: data.guessedUserCtr+1
-      });
       // increment points algorithm = totaltime/timetaken *10 = 30/20
       let room = await Room.find({ name: data.roomName });
       let userPlayer = room[0].players.filter(
         (player) => player.nickname === data.username
       );
       userPlayer[0].points = Math.round((data.totalTime / data.timeTaken) * 10);
-      console.log(userPlayer);
       room = await room[0].save();
+      io.to(data.roomName).emit("msg", {
+        username: data.username,
+        msg: "guessed it!",
+      });
+      socket.emit("closeInput", "");
       // not sending points here, will send after every user has guessed
     } else {
       io.to(data.roomName).emit("msg", {
         username: data.username,
         msg: data.msg,
-        ctr: data.guessedUserCtr
       });
     }
   });
