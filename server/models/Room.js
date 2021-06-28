@@ -22,9 +22,6 @@ const roomSchema = new mongoose.Schema({
     type: Boolean,
     default: true,
   },
-  startTime: {
-    type: Number,
-  },
   turn: playerSchema,
 });
 

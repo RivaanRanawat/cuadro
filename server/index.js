@@ -90,7 +90,6 @@ io.on("connection", (socket) => {
         socket.emit("notCorrectGame", "Please enter a valid room name");
         return;
       }
-      console.log(room);
       if (room.isJoin) {
         // waiting for players
         let player = {
@@ -103,6 +102,7 @@ io.on("connection", (socket) => {
         if (room.players.length === room.occupancy) {
           room.isJoin = false;
         }
+        room.turn = room.players[0];
         room = await room.save();
         io.to(name).emit("updateRoom", room);
       } else {

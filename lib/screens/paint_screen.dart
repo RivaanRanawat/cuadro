@@ -175,7 +175,7 @@ class _PaintScreenState extends State<PaintScreen> {
           messages.add(messageData);
           guessedUserCtr = messageData["guessedUserCtr"];
         });
-        if(guessedUserCtr == dataOfRoom["players"].length) {
+        if (guessedUserCtr == dataOfRoom["players"].length) {
           // next round
         }
         _scrollController.animateTo(
@@ -257,30 +257,39 @@ class _PaintScreenState extends State<PaintScreen> {
                           width: width,
                           height: height * 0.55,
                           child: GestureDetector(
-                            onPanUpdate: (details) {
-                              socket.emit("paint", {
-                                "details": {
-                                  "dx": details.localPosition.dx,
-                                  "dy": details.localPosition.dy
-                                },
-                                "roomName": widget.data["name"]
-                              });
-                            },
-                            onPanStart: (details) {
-                              socket.emit("paint", {
-                                "details": {
-                                  "dx": details.localPosition.dx,
-                                  "dy": details.localPosition.dy
-                                },
-                                "roomName": widget.data["name"]
-                              });
-                            },
-                            onPanEnd: (details) {
-                              socket.emit("paint", {
-                                "details": null,
-                                "roomName": widget.data["name"]
-                              });
-                            },
+                            onPanUpdate: dataOfRoom["turn"]["nickname"] ==
+                                    widget.data["nickname"]
+                                ? (details) {
+                                    socket.emit("paint", {
+                                      "details": {
+                                        "dx": details.localPosition.dx,
+                                        "dy": details.localPosition.dy
+                                      },
+                                      "roomName": widget.data["name"]
+                                    });
+                                  }
+                                : (_) {},
+                            onPanStart: dataOfRoom["turn"]["nickname"] ==
+                                    widget.data["nickname"]
+                                ? (details) {
+                                    socket.emit("paint", {
+                                      "details": {
+                                        "dx": details.localPosition.dx,
+                                        "dy": details.localPosition.dy
+                                      },
+                                      "roomName": widget.data["name"]
+                                    });
+                                  }
+                                : (_) {},
+                            onPanEnd: dataOfRoom["turn"]["nickname"] ==
+                                    widget.data["nickname"]
+                                ? (details) {
+                                    socket.emit("paint", {
+                                      "details": null,
+                                      "roomName": widget.data["name"]
+                                    });
+                                  }
+                                : (_) {},
                             child: SizedBox.expand(
                               child: ClipRRect(
                                 borderRadius:
@@ -297,39 +306,45 @@ class _PaintScreenState extends State<PaintScreen> {
                             ),
                           ),
                         ),
-                        Row(
-                          children: <Widget>[
-                            IconButton(
-                                icon: Icon(
-                                  Icons.color_lens,
-                                  color: selectedColor,
-                                ),
-                                onPressed: () {
-                                  selectColor();
-                                }),
-                            Expanded(
-                              child: Slider(
-                                min: 1.0,
-                                max: 10.0,
-                                label: "Stroke $strokeWidth",
-                                activeColor: selectedColor,
-                                value: strokeWidth,
-                                onChanged: (double value) {
-                                  socket.emit("stroke-width", value);
-                                },
+                        dataOfRoom["turn"]["nickname"] ==
+                                widget.data["nickname"]
+                            ? Row(
+                                children: <Widget>[
+                                  IconButton(
+                                      icon: Icon(
+                                        Icons.color_lens,
+                                        color: selectedColor,
+                                      ),
+                                      onPressed: () {
+                                        selectColor();
+                                      }),
+                                  Expanded(
+                                    child: Slider(
+                                      min: 1.0,
+                                      max: 10.0,
+                                      label: "Stroke $strokeWidth",
+                                      activeColor: selectedColor,
+                                      value: strokeWidth,
+                                      onChanged: (double value) {
+                                        socket.emit("stroke-width", value);
+                                      },
+                                    ),
+                                  ),
+                                  IconButton(
+                                      icon: Icon(
+                                        Icons.layers_clear,
+                                        color: Colors.black,
+                                      ),
+                                      onPressed: () {
+                                        socket.emit("clean-screen",
+                                            widget.data["name"]);
+                                      }),
+                                ],
+                              )
+                            : Center(
+                                child: Text(
+                                    "${dataOfRoom["turn"]["nickname"]} is drawing..", style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),),
                               ),
-                            ),
-                            IconButton(
-                                icon: Icon(
-                                  Icons.layers_clear,
-                                  color: Colors.black,
-                                ),
-                                onPressed: () {
-                                  socket.emit(
-                                      "clean-screen", widget.data["name"]);
-                                }),
-                          ],
-                        ),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           children: textBlankWidget,
