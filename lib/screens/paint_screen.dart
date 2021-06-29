@@ -169,14 +169,28 @@ class _PaintScreenState extends State<PaintScreen> {
         });
       });
 
+      socket.on("change-turn", (data) {
+        setState(() {
+          renderTextBlank(data["word"]);
+          dataOfRoom = data;
+          isTextInputReadOnly = false;
+          _start = 30;
+        });
+        // cancelling the before timer
+        _timer.cancel();
+        startTimer();
+      });
+
       socket.on("msg", (messageData) {
         print(messageData);
         setState(() {
           messages.add(messageData);
           guessedUserCtr = messageData["guessedUserCtr"];
         });
-        if (guessedUserCtr == dataOfRoom["players"].length) {
+        if (guessedUserCtr == dataOfRoom["players"].length - 1) {
+          // length-1 because we dont have to include the host to guess.
           // next round
+          socket.emit("change-turn", dataOfRoom["name"]);
         }
         _scrollController.animateTo(
             _scrollController.position.maxScrollExtent + 40,
@@ -343,12 +357,25 @@ class _PaintScreenState extends State<PaintScreen> {
                               )
                             : Center(
                                 child: Text(
-                                    "${dataOfRoom["turn"]["nickname"]} is drawing..", style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),),
+                                  "${dataOfRoom["turn"]["nickname"]} is drawing..",
+                                  style: TextStyle(
+                                      fontSize: 17,
+                                      fontWeight: FontWeight.bold),
+                                ),
                               ),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: textBlankWidget,
-                        ),
+                        dataOfRoom["turn"]["nickname"] !=
+                                widget.data["nickname"]
+                            ? Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceEvenly,
+                                children: textBlankWidget,
+                              )
+                            : Center(
+                                child: Text(
+                                  dataOfRoom["word"],
+                                  style: TextStyle(fontSize: 30),
+                                ),
+                              ),
                         Container(
                           height: MediaQuery.of(context).size.height * 0.3,
                           child: ListView.builder(

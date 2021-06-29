@@ -102,7 +102,7 @@ io.on("connection", (socket) => {
         if (room.players.length === room.occupancy) {
           room.isJoin = false;
         }
-        room.turn = room.players[0];
+        room.turn = room.players[room.turnIndex];
         room = await room.save();
         io.to(name).emit("updateRoom", room);
       } else {
@@ -122,6 +122,16 @@ io.on("connection", (socket) => {
     io.to(name).emit("updateScore", room);
   });
 
+  socket.on("change-turn", async (name) => {
+    let room = await Room.findOne({ name });
+    room.word = await getWord();
+    let idx = room.turnIndex;
+    idx += 1;
+    room.turn = room.players[idx];
+    room = await room.save();
+    socket.emit("change-turn", room);
+  });
+
   // sending messages in paint screen
   socket.on("msg", async (data) => {
     console.log(data.username);
@@ -137,7 +147,7 @@ io.on("connection", (socket) => {
       io.to(data.roomName).emit("msg", {
         username: data.username,
         msg: "guessed it!",
-        guessedUserCtr: data.guessedUserCtr+1
+        guessedUserCtr: data.guessedUserCtr + 1,
       });
       socket.emit("closeInput", "");
       // not sending points here, will send after every user has guessed
@@ -145,7 +155,7 @@ io.on("connection", (socket) => {
       io.to(data.roomName).emit("msg", {
         username: data.username,
         msg: data.msg,
-        guessedUserCtr: data.guessedUserCtr
+        guessedUserCtr: data.guessedUserCtr,
       });
     }
   });

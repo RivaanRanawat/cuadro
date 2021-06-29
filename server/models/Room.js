@@ -23,6 +23,10 @@ const roomSchema = new mongoose.Schema({
     default: true,
   },
   turn: playerSchema,
+  turnIndex: {
+    type: Number,
+    default: 0
+  }
 });
 
 const gameModel = mongoose.model("Room", roomSchema);
