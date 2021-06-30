@@ -213,6 +213,15 @@ class _PaintScreenState extends State<PaintScreen> {
                 strokeWidth = stroke;
               }));
 
+      // changing the color of pen
+      socket.on("color-change", (colorString) {
+        int value = int.parse(colorString, radix: 16);
+        Color otherColor = new Color(value);
+        setState(() {
+          selectedColor = otherColor;
+        });
+      });
+
       // clearing off the screen with clean button
       socket.on(
           "clear-screen",
@@ -249,9 +258,13 @@ class _PaintScreenState extends State<PaintScreen> {
             child: BlockPicker(
               pickerColor: selectedColor,
               onColorChanged: (color) {
-                this.setState(() {
-                  selectedColor = color;
-                });
+                String colorString = color.toString();
+                String valueString = colorString.split('(0x')[1].split(')')[0];
+                Map map = {
+                  "color": valueString,
+                  "roomName": dataOfRoom["name"],
+                };
+                socket.emit("color-change", map);
               },
             ),
           ),

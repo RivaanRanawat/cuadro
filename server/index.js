@@ -136,6 +136,10 @@ io.on("connection", (socket) => {
     io.to(name).emit("change-turn", room);
   });
 
+  socket.on("color-change", async (data) => {
+    io.to(data.roomName).emit("color-change", data.color);
+  })
+
   // sending messages in paint screen
   socket.on("msg", async (data) => {
     console.log(data.username);
