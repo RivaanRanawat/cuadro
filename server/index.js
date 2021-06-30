@@ -138,7 +138,7 @@ io.on("connection", (socket) => {
       console.log(room);
       io.to(name).emit("change-turn", room);
     } else {
-      io.to(name).emit("show-leaderboard", room);
+      io.to(name).emit("show-leaderboard", room.players);
     }
   });
 
