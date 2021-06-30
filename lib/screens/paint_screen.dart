@@ -93,12 +93,8 @@ class _PaintScreenState extends State<PaintScreen> {
       socket.emit("join-game", widget.data);
     }
     socket.onConnect((data) {
-      if (_start == 0) {
-        socket.emit("change-turn", dataOfRoom["name"]);
-      }
       print("connected");
       socket.on("updateRoom", (roomData) {
-        print(roomData);
         setState(() {
           renderTextBlank(roomData["word"]);
           dataOfRoom = roomData;
@@ -120,8 +116,6 @@ class _PaintScreenState extends State<PaintScreen> {
 
       // updating scoreboard
       socket.on("updateScore", (roomData) {
-        print(roomData);
-        print("pls");
         scoreboard.clear();
         for (int i = 0; i < roomData["players"].length; i++) {
           setState(() {
@@ -131,7 +125,6 @@ class _PaintScreenState extends State<PaintScreen> {
             });
           });
         }
-        print(scoreboard);
       });
 
       // Not correct game
@@ -143,7 +136,6 @@ class _PaintScreenState extends State<PaintScreen> {
 
       // getting the painting on the screen
       socket.on("points", (point) {
-        print(point);
         if (point["details"] != null) {
           setState(() {
             points.add(
@@ -173,21 +165,31 @@ class _PaintScreenState extends State<PaintScreen> {
       });
 
       socket.on("change-turn", (data) {
-        print(data);
-        setState(() {
-          dataOfRoom = data;
-          renderTextBlank(data["word"]);
-          isTextInputReadOnly = false;
-          _start = 30;
-          guessedUserCtr = 0;
-        });
+        String oldeWord = dataOfRoom["word"];
+        print(oldeWord);
         // cancelling the before timer
-        _timer.cancel();
-        startTimer();
+        showDialog(
+            context: context,
+            builder: (context) {
+              Future.delayed(Duration(seconds: 5), () {
+                Navigator.of(context).pop(true);
+                setState(() {
+                  dataOfRoom = data;
+                  renderTextBlank(data["word"]);
+                  isTextInputReadOnly = false;
+                  _start = 30;
+                  guessedUserCtr = 0;
+                });
+                _timer.cancel();
+                startTimer();
+              });
+              return AlertDialog(
+                title: Center(child: Text("Word was $oldeWord")),
+              );
+            });
       });
 
       socket.on("msg", (messageData) {
-        print(messageData);
         setState(() {
           messages.add(messageData);
           guessedUserCtr = messageData["guessedUserCtr"];
@@ -392,9 +394,7 @@ class _PaintScreenState extends State<PaintScreen> {
                               // primary: true,
                               itemCount: messages.length,
                               itemBuilder: (context, index) {
-                                // String username = messages[index].keys.elementAt(index);
                                 var msg = messages[index].values;
-                                print(msg);
                                 return ListTile(
                                   title: Text(
                                     msg.elementAt(0),
