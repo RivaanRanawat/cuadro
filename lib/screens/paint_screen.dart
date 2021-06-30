@@ -80,7 +80,7 @@ class _PaintScreenState extends State<PaintScreen> {
   }
 
   void connect() {
-    socket = IO.io("http://192.168.0.22:5000", <String, dynamic>{
+    socket = IO.io("http://192.168.43.110:5000", <String, dynamic>{
       "transports": ["websocket"],
       "autoConnect": false,
     });
@@ -167,11 +167,11 @@ class _PaintScreenState extends State<PaintScreen> {
       socket.on("change-turn", (data) {
         String oldeWord = dataOfRoom["word"];
         print(oldeWord);
-        // cancelling the before timer
         showDialog(
-            context: context,
+            context: scaffoldKey.currentContext,
+            barrierDismissible: false,
             builder: (context) {
-              Future.delayed(Duration(seconds: 5), () {
+              Future.delayed(Duration(seconds: 3), () {
                 Navigator.of(context).pop(true);
                 setState(() {
                   dataOfRoom = data;
@@ -180,6 +180,7 @@ class _PaintScreenState extends State<PaintScreen> {
                   _start = 30;
                   guessedUserCtr = 0;
                 });
+                // cancelling the before timer
                 _timer.cancel();
                 startTimer();
               });
@@ -419,6 +420,7 @@ class _PaintScreenState extends State<PaintScreen> {
                         margin: EdgeInsets.only(left: 20, right: 20),
                         child: TextField(
                           readOnly: isTextInputReadOnly,
+                          autocorrect: false,
                           focusNode: focusNode,
                           controller: textEditingController,
                           onSubmitted: (value) {
@@ -485,7 +487,7 @@ class _PaintScreenState extends State<PaintScreen> {
           bottom: 30,
         ),
         child: FloatingActionButton(
-          onPressed: startTimer,
+          onPressed: () {},
           elevation: 7,
           backgroundColor: Colors.white,
           child: Text(
