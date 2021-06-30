@@ -124,12 +124,16 @@ io.on("connection", (socket) => {
 
   socket.on("change-turn", async (name) => {
     let room = await Room.findOne({ name });
-    room.word = await getWord();
+    const word = await getWord();
+    room.word = word;
     let idx = room.turnIndex;
-    idx += 1;
-    room.turn = room.players[idx];
+    console.log("before index" + idx);
+    room.turnIndex = (idx+1) % room.players.length;
+    console.log("after index" + idx);
+    room.turn = room.players[room.turnIndex];
     room = await room.save();
-    socket.emit("change-turn", room);
+    console.log(room);
+    io.to(name).emit("change-turn", room);
   });
 
   // sending messages in paint screen

@@ -93,6 +93,9 @@ class _PaintScreenState extends State<PaintScreen> {
       socket.emit("join-game", widget.data);
     }
     socket.onConnect((data) {
+      if (_start == 0) {
+        socket.emit("change-turn", dataOfRoom["name"]);
+      }
       print("connected");
       socket.on("updateRoom", (roomData) {
         print(roomData);
@@ -170,11 +173,13 @@ class _PaintScreenState extends State<PaintScreen> {
       });
 
       socket.on("change-turn", (data) {
+        print(data);
         setState(() {
-          renderTextBlank(data["word"]);
           dataOfRoom = data;
+          renderTextBlank(data["word"]);
           isTextInputReadOnly = false;
           _start = 30;
+          guessedUserCtr = 0;
         });
         // cancelling the before timer
         _timer.cancel();
@@ -211,6 +216,9 @@ class _PaintScreenState extends State<PaintScreen> {
           (data) => this.setState(() {
                 points.clear();
               }));
+
+      // disconnect socket
+      socket.onDisconnect((_) => print('disconnectted'));
     });
 
     // socket.emit("test", "Hello World");
@@ -414,8 +422,6 @@ class _PaintScreenState extends State<PaintScreen> {
                           focusNode: focusNode,
                           controller: textEditingController,
                           onSubmitted: (value) {
-                            print(dataOfRoom["players"].length);
-                            print(dataOfRoom["word"]);
                             if (value.trim().isNotEmpty) {
                               Map map = {
                                 "username": widget.data["nickname"],
