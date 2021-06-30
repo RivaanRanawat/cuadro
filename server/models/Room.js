@@ -17,6 +17,15 @@ const roomSchema = new mongoose.Schema({
     type: Number,
     default: 4
   },
+  maxRounds: {
+    required: true,
+    type: Number,
+  },
+  currentRound: {
+    required: true,
+    type: Number,
+    default: 1,
+  },
   players: [playerSchema],
   isJoin: {
     type: Boolean,

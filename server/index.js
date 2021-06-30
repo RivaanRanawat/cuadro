@@ -55,7 +55,7 @@ io.on("connection", (socket) => {
 
   // game related sockets
   // creating game
-  socket.on("create-game", async ({ nickname, name, occupancy }) => {
+  socket.on("create-game", async ({ nickname, name, occupancy, maxRounds }) => {
     try {
       const existingRoom = await Room.findOne({ name });
       if (existingRoom) {
@@ -67,6 +67,7 @@ io.on("connection", (socket) => {
       room.word = word;
       room.name = name;
       room.occupancy = occupancy;
+      room.maxRounds = maxRounds;
       let player = {
         socketID: socket.id,
         nickname,
@@ -124,21 +125,26 @@ io.on("connection", (socket) => {
 
   socket.on("change-turn", async (name) => {
     let room = await Room.findOne({ name });
-    const word = await getWord();
-    room.word = word;
     let idx = room.turnIndex;
-    console.log("before index" + idx);
-    room.turnIndex = (idx+1) % room.players.length;
-    console.log("after index" + idx);
-    room.turn = room.players[room.turnIndex];
-    room = await room.save();
-    console.log(room);
-    io.to(name).emit("change-turn", room);
+    if (idx + 1 === room.players.length) {
+      room.currentRound += 1;
+    }
+    if (room.currentRound <= room.maxRounds) {
+      const word = await getWord();
+      room.word = word;
+      room.turnIndex = (idx + 1) % room.players.length;
+      room.turn = room.players[room.turnIndex];
+      room = await room.save();
+      console.log(room);
+      io.to(name).emit("change-turn", room);
+    } else {
+      io.to(name).emit("show-leaderboard", room);
+    }
   });
 
   socket.on("color-change", async (data) => {
     io.to(data.roomName).emit("color-change", data.color);
-  })
+  });
 
   // sending messages in paint screen
   socket.on("msg", async (data) => {
@@ -150,7 +156,9 @@ io.on("connection", (socket) => {
       let userPlayer = room[0].players.filter(
         (player) => player.nickname === data.username
       );
-      userPlayer[0].points += Math.round((data.totalTime / data.timeTaken) * 10);
+      userPlayer[0].points += Math.round(
+        (data.totalTime / data.timeTaken) * 10
+      );
       room = await room[0].save();
       io.to(data.roomName).emit("msg", {
         username: data.username,

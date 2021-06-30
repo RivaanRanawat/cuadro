@@ -190,6 +190,10 @@ class _PaintScreenState extends State<PaintScreen> {
             });
       });
 
+      socket.on("show-leaderboard", (roomData) {
+        print(roomData);
+      });
+
       socket.on("msg", (messageData) {
         setState(() {
           messages.add(messageData);

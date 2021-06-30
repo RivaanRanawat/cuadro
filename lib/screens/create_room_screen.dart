@@ -10,6 +10,7 @@ class _CreateRoomScreenState extends State<CreateRoomScreen> {
   final TextEditingController roomController = TextEditingController();
   final TextEditingController nameController = TextEditingController();
   String _chosenValue;
+  String _maxRoundsValue;
 
   @override
   Widget build(BuildContext context) {
@@ -74,6 +75,36 @@ class _CreateRoomScreenState extends State<CreateRoomScreen> {
           SizedBox(height: 20),
           DropdownButton<String>(
             focusColor: Color(0xffF5F6FA),
+            value: _maxRoundsValue,
+            //elevation: 5,
+            style: TextStyle(color: Colors.white),
+            iconEnabledColor: Colors.black,
+            items: <String>["2", "5", "10", "15"]
+                .map<DropdownMenuItem<String>>(
+                    (String value) => DropdownMenuItem<String>(
+                          value: value,
+                          child: new Text(
+                            value,
+                            style: TextStyle(color: Colors.black),
+                          ),
+                        ))
+                .toList(),
+            hint: Text(
+              "Select Max Rounds",
+              style: TextStyle(
+                  color: Colors.black,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500),
+            ),
+            onChanged: (String value) {
+              setState(() {
+                _maxRoundsValue = value;
+              });
+            },
+          ),
+          SizedBox(height: 20),
+          DropdownButton<String>(
+            focusColor: Color(0xffF5F6FA),
             value: _chosenValue,
             //elevation: 5,
             style: TextStyle(color: Colors.white),
@@ -106,15 +137,20 @@ class _CreateRoomScreenState extends State<CreateRoomScreen> {
             onPressed: () {
               if (nameController.text.isNotEmpty &&
                   roomController.text.isNotEmpty &&
-                  _chosenValue != null) {
+                  _chosenValue != null &&
+                  _maxRoundsValue != null) {
                 Map data = {
                   "nickname": nameController.text,
                   "name": roomController.text,
-                  "occupancy": _chosenValue
+                  "occupancy": _chosenValue,
+                  "maxRounds": _maxRoundsValue
                 };
 
                 Navigator.of(context).push(MaterialPageRoute(
-                    builder: (context) => PaintScreen(data: data, screenFrom: "createRoom",)));
+                    builder: (context) => PaintScreen(
+                          data: data,
+                          screenFrom: "createRoom",
+                        )));
               } else {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
