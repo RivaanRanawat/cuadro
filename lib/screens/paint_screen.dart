@@ -194,8 +194,15 @@ class _PaintScreenState extends State<PaintScreen> {
       });
 
       socket.on("show-leaderboard", (roomPlayers) {
-        // [{points:73, username: 0}, {points: 1, username: 2}]
-        for (int i = 0; i < scoreboard.length; i++) {
+        print(scoreboard);
+        scoreboard.clear();
+        for (int i = 0; i < roomPlayers.length; i++) {
+          setState(() {
+            scoreboard.add({
+              "username": roomPlayers[i]["nickname"],
+              "points": roomPlayers[i]["points"].toString()
+            });
+          });
           if (maxPoints < int.parse(scoreboard[i]["points"])) {
             winner = scoreboard[i]["username"];
             maxPoints = int.parse(scoreboard[i]["points"]);
@@ -446,57 +453,62 @@ class _PaintScreenState extends State<PaintScreen> {
                             ),
                           ],
                         ),
-                        Align(
-                          alignment: Alignment.bottomCenter,
-                          child: Container(
-                            margin: EdgeInsets.only(left: 20, right: 20),
-                            child: TextField(
-                              readOnly: isTextInputReadOnly,
-                              autocorrect: false,
-                              focusNode: focusNode,
-                              controller: textEditingController,
-                              onSubmitted: (value) {
-                                if (value.trim().isNotEmpty) {
-                                  Map map = {
-                                    "username": widget.data["nickname"],
-                                    "msg": value.trim(),
-                                    "word": dataOfRoom["word"],
-                                    "roomName": widget.data["name"],
-                                    "totalTime": roundTime,
-                                    "timeTaken": roundTime - _start,
-                                    "guessedUserCtr": guessedUserCtr
-                                  };
-                                  socket.emit("msg", map);
-                                  textEditingController.clear();
-                                  FocusScope.of(context)
-                                      .requestFocus(focusNode);
-                                }
-                              },
-                              decoration: InputDecoration(
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                  borderSide: BorderSide(
-                                      color: Colors.transparent, width: 0),
+                        dataOfRoom["turn"]["nickname"] !=
+                                widget.data["nickname"]
+                            ? Align(
+                                alignment: Alignment.bottomCenter,
+                                child: Container(
+                                  margin: EdgeInsets.only(left: 20, right: 20),
+                                  child: TextField(
+                                    readOnly: isTextInputReadOnly,
+                                    autocorrect: false,
+                                    focusNode: focusNode,
+                                    controller: textEditingController,
+                                    onSubmitted: (value) {
+                                      if (value.trim().isNotEmpty) {
+                                        Map map = {
+                                          "username": widget.data["nickname"],
+                                          "msg": value.trim(),
+                                          "word": dataOfRoom["word"],
+                                          "roomName": widget.data["name"],
+                                          "totalTime": roundTime,
+                                          "timeTaken": roundTime - _start,
+                                          "guessedUserCtr": guessedUserCtr
+                                        };
+                                        socket.emit("msg", map);
+                                        textEditingController.clear();
+                                        FocusScope.of(context)
+                                            .requestFocus(focusNode);
+                                      }
+                                    },
+                                    decoration: InputDecoration(
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(8),
+                                        borderSide: BorderSide(
+                                            color: Colors.transparent,
+                                            width: 0),
+                                      ),
+                                      enabledBorder: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(8),
+                                        borderSide: BorderSide(
+                                            color: Colors.transparent,
+                                            width: 0),
+                                      ),
+                                      contentPadding: EdgeInsets.symmetric(
+                                          horizontal: 16, vertical: 14),
+                                      filled: true,
+                                      fillColor: Color(0xffF5F6FA),
+                                      hintText: "Your guess",
+                                      hintStyle: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w400,
+                                      ),
+                                    ),
+                                    textInputAction: TextInputAction.done,
+                                  ),
                                 ),
-                                enabledBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                  borderSide: BorderSide(
-                                      color: Colors.transparent, width: 0),
-                                ),
-                                contentPadding: EdgeInsets.symmetric(
-                                    horizontal: 16, vertical: 14),
-                                filled: true,
-                                fillColor: Color(0xffF5F6FA),
-                                hintText: "Your guess",
-                                hintStyle: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w400,
-                                ),
-                              ),
-                              textInputAction: TextInputAction.done,
-                            ),
-                          ),
-                        ),
+                              )
+                            : Container(),
                         SafeArea(
                           child: IconButton(
                             icon: Icon(
