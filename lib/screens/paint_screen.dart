@@ -39,6 +39,8 @@ class _PaintScreenState extends State<PaintScreen> {
   int roundTime = 30;
   int guessedUserCtr = 0;
   bool isShowFinalLeaderboard = false;
+  String winner;
+  int maxPoints = 0;
 
   // round time -> 30 sec
   // waiting -> until room.players === room.occupancy
@@ -81,7 +83,7 @@ class _PaintScreenState extends State<PaintScreen> {
   }
 
   void connect() {
-    socket = IO.io("http://192.168.43.110:5000", <String, dynamic>{
+    socket = IO.io("http://192.168.0.22:5000", <String, dynamic>{
       "transports": ["websocket"],
       "autoConnect": false,
     });
@@ -167,21 +169,21 @@ class _PaintScreenState extends State<PaintScreen> {
 
       socket.on("change-turn", (data) {
         String oldeWord = dataOfRoom["word"];
-        print(oldeWord);
         showDialog(
             context: scaffoldKey.currentContext,
-            barrierDismissible: false,
-            builder: (context) {
+            barrierDismissible: true,
+            builder: (newContext) {
               Future.delayed(Duration(seconds: 3), () {
-                Navigator.of(context).pop(true);
                 setState(() {
                   dataOfRoom = data;
                   renderTextBlank(data["word"]);
                   isTextInputReadOnly = false;
                   _start = 30;
                   guessedUserCtr = 0;
+                  points.clear();
                 });
                 // cancelling the before timer
+                Navigator.of(newContext).pop(true);
                 _timer.cancel();
                 startTimer();
               });
@@ -192,15 +194,18 @@ class _PaintScreenState extends State<PaintScreen> {
       });
 
       socket.on("show-leaderboard", (roomPlayers) {
-        for (int i = 0; i < roomPlayers.length; i++) {
-          setState(() {
-            isShowFinalLeaderboard = true;
-            scoreboard.add({
-              "username": roomPlayers[i]["nickname"],
-              "points": roomPlayers[i]["points"].toString()
-            });
-          });
+        // [{points:73, username: 0}, {points: 1, username: 2}]
+        for (int i = 0; i < scoreboard.length; i++) {
+          if (maxPoints < int.parse(scoreboard[i]["points"])) {
+            winner = scoreboard[i]["username"];
+            maxPoints = int.parse(scoreboard[i]["points"]);
+            print(maxPoints);
+            print(winner);
+          }
         }
+        setState(() {
+          isShowFinalLeaderboard = true;
+        });
       });
 
       socket.on("msg", (messageData) {
@@ -506,14 +511,17 @@ class _PaintScreenState extends State<PaintScreen> {
                     )
                   : Center(
                       child: Container(
+                        padding: const EdgeInsets.all(8),
                         height: double.maxFinite,
-                        child: ListView.builder(
-                          itemCount: scoreboard.length,
-                          itemBuilder: (BuildContext context, index) {
-                            var data = scoreboard[index].values;
-                            return Column(
-                              children: [
-                                ListTile(
+                        child: Column(
+                          children: [
+                            ListView.builder(
+                              primary: true,
+                              shrinkWrap: true,
+                              itemCount: scoreboard.length,
+                              itemBuilder: (BuildContext context, index) {
+                                var data = scoreboard[index].values;
+                                return ListTile(
                                   title: Text(
                                     data.elementAt(0),
                                     style: TextStyle(
@@ -528,10 +536,20 @@ class _PaintScreenState extends State<PaintScreen> {
                                         color: Colors.grey,
                                         fontWeight: FontWeight.bold),
                                   ),
-                                ),
-                              ],
-                            );
-                          },
+                                );
+                              },
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Text(
+                                "$winner has won the game!",
+                                style: TextStyle(
+                                    color: Colors.black,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 30),
+                              ),
+                            )
+                          ],
                         ),
                       ),
                     )
