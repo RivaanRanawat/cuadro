@@ -1,7 +1,7 @@
 const express = require("express");
 var http = require("http");
 const app = express();
-const port = process.env.PORT || 5000;
+const port = process.env.PORT;
 var server = http.createServer(app);
 var io = require("socket.io")(server);
 const mongoose = require("mongoose");
@@ -148,9 +148,9 @@ io.on("connection", (socket) => {
       let userPlayer = room[0].players.filter(
         (player) => player.nickname === data.username
       );
-      userPlayer[0].points += Math.round(
-        (data.totalTime / data.timeTaken) * 10
-      );
+      if (data.timeTaken !== 0) {
+        userPlayer[0].points += Math.round((200 / data.timeTaken) * 10);
+      }
       room = await room[0].save();
       io.to(data.roomName).emit("msg", {
         username: data.username,
@@ -187,6 +187,6 @@ io.on("connection", (socket) => {
   });
 });
 
-server.listen(port, "0.0.0.0", () => {
+server.listen(port, () => {
   console.log("server started");
 });
