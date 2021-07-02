@@ -212,6 +212,7 @@ class _PaintScreenState extends State<PaintScreen> {
           }
         }
         setState(() {
+          _timer.cancel();
           isShowFinalLeaderboard = true;
         });
       });
@@ -255,8 +256,17 @@ class _PaintScreenState extends State<PaintScreen> {
                 points.clear();
               }));
 
-      // disconnect socket
-      socket.onDisconnect((_) => print('disconnectted'));
+      socket.on("user-disconnected", (data) {
+        scoreboard.clear();
+        for (int i = 0; i < data["players"].length; i++) {
+          setState(() {
+            scoreboard.add({
+              "username": data["players"][i]["nickname"],
+              "points": data["players"][i]["points"].toString()
+            });
+          });
+        }
+      });
     });
 
     // socket.emit("test", "Hello World");

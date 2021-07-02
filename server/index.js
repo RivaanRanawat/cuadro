@@ -39,13 +39,10 @@ io.on("connection", (socket) => {
 
   // white board related sockets
   socket.on("paint", ({ details, roomName }) => {
-    console.log(details);
-    console.log(roomName);
     io.to(roomName).emit("points", { details: details });
   });
 
   socket.on("clean-screen", (roomId) => {
-    console.log("screen clean");
     io.to(roomId).emit("clear-screen", "");
   });
 
@@ -84,7 +81,6 @@ io.on("connection", (socket) => {
 
   // joining game
   socket.on("join-game", async ({ nickname, name }) => {
-    console.log(name, nickname);
     try {
       let room = await Room.findOne({ name });
       if (!room) {
@@ -99,7 +95,6 @@ io.on("connection", (socket) => {
         };
         room.players.push(player);
         socket.join(name);
-        console.log(room.players.length);
         if (room.players.length === room.occupancy) {
           room.isJoin = false;
         }
@@ -135,7 +130,6 @@ io.on("connection", (socket) => {
       room.turnIndex = (idx + 1) % room.players.length;
       room.turn = room.players[room.turnIndex];
       room = await room.save();
-      console.log(room);
       io.to(name).emit("change-turn", room);
     } else {
       io.to(name).emit("show-leaderboard", room.players);
@@ -148,8 +142,6 @@ io.on("connection", (socket) => {
 
   // sending messages in paint screen
   socket.on("msg", async (data) => {
-    console.log(data.username);
-    console.log(data.msg);
     if (data.msg === data.word) {
       // increment points algorithm = totaltime/timetaken *10 = 30/20
       let room = await Room.find({ name: data.roomName });
@@ -173,6 +165,24 @@ io.on("connection", (socket) => {
         msg: data.msg,
         guessedUserCtr: data.guessedUserCtr,
       });
+    }
+  });
+
+  socket.on("disconnect", async () => {
+    console.log("disconnected");
+    let room = await Room.findOne({ "players.socketID": socket.id });
+    console.log(room);
+    for (let i = 0; i < room.players.length; i++) {
+      if (room.players[i].socketID === socket.id) {
+        room.players.splice(i, 1);
+        break;
+      }
+    }
+    room = await room.save();
+    if (room.players.length === 1) {
+      socket.broadcast.to(room.name).emit("show-leaderboard", room.players);
+    } else {
+      socket.broadcast.to(room.name).emit("user-disconnected", room);
     }
   });
 });
