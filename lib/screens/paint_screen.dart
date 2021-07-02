@@ -5,6 +5,7 @@ import 'package:cuadro/models/touch_point.dart';
 import 'package:cuadro/screens/home_screen.dart';
 import 'package:cuadro/sidebar/player_score_drawer.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 
@@ -576,9 +577,87 @@ class _PaintScreenState extends State<PaintScreen> {
                         ),
                       ),
                     )
-              : Center(
-                  child: Text(
-                      "Waiting for ${dataOfRoom["occupancy"] - dataOfRoom["players"].length} players to join"),
+              : SafeArea(
+                  child: Column(
+                    children: [
+                      SizedBox(
+                          height: MediaQuery.of(context).size.height * 0.03),
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Text(
+                          "Waiting for ${dataOfRoom["occupancy"] - dataOfRoom["players"].length} players to join",
+                          style: TextStyle(
+                            fontSize: 30,
+                          ),
+                        ),
+                      ),
+                      SizedBox(
+                          height: MediaQuery.of(context).size.height * 0.06),
+                      Container(
+                        margin: EdgeInsets.symmetric(horizontal: 20),
+                        child: TextField(
+                          readOnly: true,
+                          onTap: () {
+                            Clipboard.setData(
+                                ClipboardData(text: dataOfRoom["name"]));
+                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                              content: Text("Copied!"),
+                            ));
+                          },
+                          decoration: InputDecoration(
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                                borderSide: BorderSide(
+                                    color: Colors.transparent, width: 0),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                                borderSide: BorderSide(
+                                    color: Colors.transparent, width: 0),
+                              ),
+                              contentPadding: EdgeInsets.symmetric(
+                                  horizontal: 16, vertical: 14),
+                              filled: true,
+                              fillColor: Color(0xffF5F6FA),
+                              hintText: "Tap to copy room name!",
+                              hintStyle: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w400,
+                              )),
+                        ),
+                      ),
+                      SizedBox(
+                          height: MediaQuery.of(context).size.height * 0.1),
+                      Text(
+                        "Players: ",
+                        style: TextStyle(
+                          fontSize: 18,
+                        ),
+                      ),
+                      ListView.builder(
+                          primary: true,
+                          shrinkWrap: true,
+                          itemCount: dataOfRoom["players"].length,
+                          itemBuilder: (context, index) {
+                            return ListTile(
+                              leading: Text(
+                                "${index + 1}.",
+                                style: TextStyle(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              title: Text(
+                                dataOfRoom["players"][index]["nickname"],
+                                style: TextStyle(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            );
+                          })
+                    ],
+                  ),
                 )
           : Center(
               child: CircularProgressIndicator(),
