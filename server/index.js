@@ -60,7 +60,7 @@ io.on("connection", (socket) => {
         return;
       }
       let room = new Room();
-      const word = await getWord();
+      const word = getWord();
       room.word = word;
       room.name = name;
       room.occupancy = occupancy;
@@ -125,7 +125,7 @@ io.on("connection", (socket) => {
       room.currentRound += 1;
     }
     if (room.currentRound <= room.maxRounds) {
-      const word = await getWord();
+      const word = getWord();
       room.word = word;
       room.turnIndex = (idx + 1) % room.players.length;
       room.turn = room.players[room.turnIndex];
