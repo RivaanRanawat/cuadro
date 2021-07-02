@@ -36,8 +36,8 @@ class _PaintScreenState extends State<PaintScreen> {
   bool isTextInputReadOnly = false;
 
   Timer _timer;
-  int _start = 30;
-  int roundTime = 30;
+  int _start = 60;
+  int roundTime = 60;
   int guessedUserCtr = 0;
   bool isShowFinalLeaderboard = false;
   String winner;
