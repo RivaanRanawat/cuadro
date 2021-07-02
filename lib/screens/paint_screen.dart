@@ -52,6 +52,7 @@ class _PaintScreenState extends State<PaintScreen> {
       oneSec,
       (Timer timer) {
         if (_start == 0) {
+          socket.emit("change-turn", dataOfRoom["name"]);
           setState(() {
             timer.cancel();
           });
