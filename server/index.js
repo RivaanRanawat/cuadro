@@ -1,26 +1,26 @@
 const express = require("express");
 var http = require("http");
 const app = express();
-const port = process.env.PORT;
+const port = process.env.PORT || 3000;
 var server = http.createServer(app);
 var io = require("socket.io")(server);
 const mongoose = require("mongoose");
 const getWord = require("./apis/generateWord");
 const Room = require("./models/Room");
+const dotenv = require("dotenv");
+
+dotenv.config();
 
 //middleware
 app.use(express.json());
 
 mongoose
-  .connect(
-    "mongodb+srv://rivaan:rivaanranawat@cluster0.xbhhc.mongodb.net/myFirstDatabase?retryWrites=true&w=majority",
-    {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-      useCreateIndex: true,
-      useFindAndModify: false,
-    }
-  )
+  .connect(process.env.MONGODB_URL, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+    useCreateIndex: true,
+    useFindAndModify: false,
+  })
   .then(() => {
     console.log("connection succesful");
   })
@@ -30,8 +30,13 @@ mongoose
 
 // sockets
 
+app.get("/", (req, res) => {
+  return res.send("HEY Working, lets gooooo");
+});
+
 io.on("connection", (socket) => {
   console.log("connected");
+  console.log(process.env.NODE_ENV);
   console.log(socket.id, "has joined");
   socket.on("test", (data) => {
     console.log(data);
@@ -119,10 +124,12 @@ io.on("connection", (socket) => {
   });
 
   socket.on("change-turn", async (name) => {
+    console.log("Change Turn!");
     let room = await Room.findOne({ name });
     let idx = room.turnIndex;
     if (idx + 1 === room.players.length) {
       room.currentRound += 1;
+      console.log("current round increase");
     }
     if (room.currentRound <= room.maxRounds) {
       const word = getWord();
@@ -130,6 +137,7 @@ io.on("connection", (socket) => {
       room.turnIndex = (idx + 1) % room.players.length;
       room.turn = room.players[room.turnIndex];
       room = await room.save();
+      console.log("changing turn blah");
       io.to(name).emit("change-turn", room);
     } else {
       io.to(name).emit("show-leaderboard", room.players);
@@ -188,5 +196,5 @@ io.on("connection", (socket) => {
 });
 
 server.listen(port, () => {
-  console.log("server started");
+  console.log("server started & running on " + port);
 });
