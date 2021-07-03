@@ -85,7 +85,7 @@ class _PaintScreenState extends State<PaintScreen> {
   }
 
   void connect() {
-    socket = IO.io("http://192.168.0.22:5000", <String, dynamic>{
+    socket = IO.io("http://192.168.0.22:3000", <String, dynamic>{
       "transports": ["websocket"],
       "autoConnect": false,
     });
@@ -170,6 +170,7 @@ class _PaintScreenState extends State<PaintScreen> {
       });
 
       socket.on("change-turn", (data) {
+        print("HEY CHANGE TURN PAINT SCREEN");
         String oldeWord = dataOfRoom["word"];
         showDialog(
             context: scaffoldKey.currentContext,

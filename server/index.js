@@ -6,7 +6,7 @@ var server = http.createServer(app);
 var io = require("socket.io")(server);
 const mongoose = require("mongoose");
 const getWord = require("./apis/generateWord");
-const Room = require("./models/Room");
+const Room = require("./models/room");
 const dotenv = require("dotenv");
 
 dotenv.config();
@@ -31,7 +31,7 @@ mongoose
 // sockets
 
 app.get("/", (req, res) => {
-  return res.send("HEY Working, lets gooooo");
+  return res.send("HEY Working, lets gooooooo!");
 });
 
 io.on("connection", (socket) => {
