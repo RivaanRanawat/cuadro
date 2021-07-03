@@ -34,13 +34,7 @@ A Cross Platform - Web, Android & iOS App multiplayer doodling & guessing game.
 ## Screenshots
 
 ### Mobile
-<img src="https://github.com/RivaanRanawat/cuadro/blob/master/screenshots/iphone/MainScreen.png" width="200" />
-<img src="https://github.com/RivaanRanawat/cuadro/blob/master/screenshots/iphone/CreateRoomScreen.png" width="200" />
-<img src="https://github.com/RivaanRanawat/cuadro/blob/master/screenshots/iphone/JoinRoomScreen.png" width="200" />
-<img src="https://github.com/RivaanRanawat/cuadro/blob/master/screenshots/iphone/WaitingLobbyScreen.png" width="200" />
-<img src="https://github.com/RivaanRanawat/cuadro/blob/master/screenshots/iphone/DrawerTurn.png" width="200" />
-<img src="https://github.com/RivaanRanawat/cuadro/blob/master/screenshots/iphone/RoundComplete.png" width="200" />
-<img src="https://github.com/RivaanRanawat/cuadro/blob/master/screenshots/iphone/ScoreBoard.png" width="200" />
+<img src="https://github.com/RivaanRanawat/cuadro/blob/master/screenshots/iphone/MainScreen.png" width="200" />  <img src="https://github.com/RivaanRanawat/cuadro/blob/master/screenshots/iphone/CreateRoomScreen.png" width="200" />  <img src="https://github.com/RivaanRanawat/cuadro/blob/master/screenshots/iphone/JoinRoomScreen.png" width="200" />  <img src="https://github.com/RivaanRanawat/cuadro/blob/master/screenshots/iphone/WaitingLobbyScreen.png" width="200" />  <img src="https://github.com/RivaanRanawat/cuadro/blob/master/screenshots/iphone/DrawerTurn.png" width="200" />  <img src="https://github.com/RivaanRanawat/cuadro/blob/master/screenshots/iphone/RoundComplete.png" width="200" />  <img src="https://github.com/RivaanRanawat/cuadro/blob/master/screenshots/iphone/ScoreBoard.png" width="200" />
 
 
 ### Web
