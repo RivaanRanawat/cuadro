@@ -6,7 +6,7 @@ var server = http.createServer(app);
 var io = require("socket.io")(server);
 const mongoose = require("mongoose");
 const getWord = require("./apis/generateWord");
-const Room = require("./models/room");
+const Room = require("./models/Room");
 const dotenv = require("dotenv");
 
 dotenv.config();
@@ -36,7 +36,6 @@ app.get("/", (req, res) => {
 
 io.on("connection", (socket) => {
   console.log("connected");
-  console.log(process.env.NODE_ENV);
   console.log(socket.id, "has joined");
   socket.on("test", (data) => {
     console.log(data);
@@ -119,28 +118,37 @@ io.on("connection", (socket) => {
 
   socket.on("updateScore", async (name) => {
     console.log("update score index");
-    const room = await Room.findOne({ name });
-    io.to(name).emit("updateScore", room);
+    try {
+      const room = await Room.findOne({ name });
+      io.to(name).emit("updateScore", room);
+    } catch (err) {
+      console.log(err.toString());
+    }
   });
 
   socket.on("change-turn", async (name) => {
     console.log("Change Turn!");
-    let room = await Room.findOne({ name });
-    let idx = room.turnIndex;
-    if (idx + 1 === room.players.length) {
-      room.currentRound += 1;
-      console.log("current round increase");
-    }
-    if (room.currentRound <= room.maxRounds) {
-      const word = getWord();
-      room.word = word;
-      room.turnIndex = (idx + 1) % room.players.length;
-      room.turn = room.players[room.turnIndex];
-      room = await room.save();
-      console.log("changing turn blah");
-      io.to(name).emit("change-turn", room);
-    } else {
-      io.to(name).emit("show-leaderboard", room.players);
+    try {
+      let room = await Room.findOne({ name });
+      let idx = room.turnIndex;
+      if (idx + 1 === room.players.length) {
+        room.currentRound += 1;
+        console.log("current round increase");
+      }
+      if (room.currentRound <= room.maxRounds) {
+        const word = getWord();
+        room.word = word;
+        room.turnIndex = (idx + 1) % room.players.length;
+        room.turn = room.players[room.turnIndex];
+        room = await room.save();
+        console.log("changing turn blah");
+        io.to(name).emit("change-turn", room);
+        console.log("change turn sss");
+      } else {
+        io.to(name).emit("show-leaderboard", room.players);
+      }
+    } catch (err) {
+      console.log(err.toString());
     }
   });
 
@@ -150,51 +158,59 @@ io.on("connection", (socket) => {
 
   // sending messages in paint screen
   socket.on("msg", async (data) => {
-    if (data.msg === data.word) {
-      // increment points algorithm = totaltime/timetaken *10 = 30/20
-      let room = await Room.find({ name: data.roomName });
-      let userPlayer = room[0].players.filter(
-        (player) => player.nickname === data.username
-      );
-      if (data.timeTaken !== 0) {
-        userPlayer[0].points += Math.round((200 / data.timeTaken) * 10);
+    try {
+      if (data.msg === data.word) {
+        // increment points algorithm = totaltime/timetaken *10 = 30/20
+        let room = await Room.find({ name: data.roomName });
+        let userPlayer = room[0].players.filter(
+          (player) => player.nickname === data.username
+        );
+        if (data.timeTaken !== 0) {
+          userPlayer[0].points += Math.round((200 / data.timeTaken) * 10);
+        }
+        room = await room[0].save();
+        io.to(data.roomName).emit("msg", {
+          username: data.username,
+          msg: "guessed it!",
+          guessedUserCtr: data.guessedUserCtr + 1,
+        });
+        socket.emit("closeInput", "");
+        // not sending points here, will send after every user has guessed
+      } else {
+        io.to(data.roomName).emit("msg", {
+          username: data.username,
+          msg: data.msg,
+          guessedUserCtr: data.guessedUserCtr,
+        });
       }
-      room = await room[0].save();
-      io.to(data.roomName).emit("msg", {
-        username: data.username,
-        msg: "guessed it!",
-        guessedUserCtr: data.guessedUserCtr + 1,
-      });
-      socket.emit("closeInput", "");
-      // not sending points here, will send after every user has guessed
-    } else {
-      io.to(data.roomName).emit("msg", {
-        username: data.username,
-        msg: data.msg,
-        guessedUserCtr: data.guessedUserCtr,
-      });
+    } catch (err) {
+      console.log(err.toString());
     }
   });
 
   socket.on("disconnect", async () => {
     console.log("disconnected");
-    let room = await Room.findOne({ "players.socketID": socket.id });
-    console.log(room);
-    for (let i = 0; i < room.players.length; i++) {
-      if (room.players[i].socketID === socket.id) {
-        room.players.splice(i, 1);
-        break;
+    try {
+      let room = await Room.findOne({ "players.socketID": socket.id });
+      console.log(room);
+      for (let i = 0; i < room.players.length; i++) {
+        if (room.players[i].socketID === socket.id) {
+          room.players.splice(i, 1);
+          break;
+        }
       }
-    }
-    room = await room.save();
-    if (room.players.length === 1) {
-      socket.broadcast.to(room.name).emit("show-leaderboard", room.players);
-    } else {
-      socket.broadcast.to(room.name).emit("user-disconnected", room);
+      room = await room.save();
+      if (room.players.length === 1) {
+        socket.broadcast.to(room.name).emit("show-leaderboard", room.players);
+      } else {
+        socket.broadcast.to(room.name).emit("user-disconnected", room);
+      }
+    } catch (err) {
+      console.log(err.toString());
     }
   });
 });
 
-server.listen(port, () => {
+server.listen(port, "0.0.0.0",() => {
   console.log("server started & running on " + port);
 });

@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-const {playerSchema} = require("./player");
+const {playerSchema} = require("./Player");
 
 const roomSchema = new mongoose.Schema({
   word: {

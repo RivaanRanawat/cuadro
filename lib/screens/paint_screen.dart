@@ -53,6 +53,7 @@ class _PaintScreenState extends State<PaintScreen> {
       oneSec,
       (Timer timer) {
         if (_start == 0) {
+          print("timer 0");
           socket.emit("change-turn", dataOfRoom["name"]);
           setState(() {
             timer.cancel();
@@ -85,7 +86,7 @@ class _PaintScreenState extends State<PaintScreen> {
   }
 
   void connect() {
-    socket = IO.io("http://192.168.0.22:3000", <String, dynamic>{
+    socket = IO.io("http://<yourip>:3000", <String, dynamic>{
       "transports": ["websocket"],
       "autoConnect": false,
     });
@@ -181,12 +182,12 @@ class _PaintScreenState extends State<PaintScreen> {
                   dataOfRoom = data;
                   renderTextBlank(data["word"]);
                   isTextInputReadOnly = false;
-                  _start = 30;
+                  _start = 60;
                   guessedUserCtr = 0;
                   points.clear();
                 });
                 // cancelling the before timer
-                Navigator.of(newContext).pop(true);
+                Navigator.of(scaffoldKey.currentContext).pop(true);
                 _timer.cancel();
                 startTimer();
               });
@@ -227,6 +228,7 @@ class _PaintScreenState extends State<PaintScreen> {
         if (guessedUserCtr == dataOfRoom["players"].length - 1) {
           // length-1 because we dont have to include the host to guess.
           // next round
+          print("message change turn");
           socket.emit("change-turn", dataOfRoom["name"]);
         }
         _scrollController.animateTo(
@@ -239,7 +241,7 @@ class _PaintScreenState extends State<PaintScreen> {
       socket.on(
           "stroke-width",
           (stroke) => this.setState(() {
-                strokeWidth = stroke;
+                strokeWidth = stroke.toDouble();
               }));
 
       // changing the color of pen
